@@ -7,10 +7,10 @@ export default function Picker() {
     const [driveUrl, setDriveUrl] = useState('');
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [isUploading, setIsUploading] = useState(false);
+    const [showDemoWarning, setShowDemoWarning] = useState(false);
 
     const handleConnectDrive = () => {
-        localStorage.setItem('cmads_video_source', driveUrl);
-        navigate('/dashboard');
+        setShowDemoWarning(true);
     };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -19,31 +19,48 @@ export default function Picker() {
         }
     };
 
-    const handleUpload = async () => {
+    const handleUploadClick = () => {
         if (!selectedFile) return;
+        setShowDemoWarning(true);
+    };
 
-        setIsUploading(true);
-        const formData = new FormData();
-        formData.append('file', selectedFile);
+    const proceedToDashboard = async () => {
+        if (selectedFile) {
+            setIsUploading(true);
+            const formData = new FormData();
+            formData.append('file', selectedFile);
 
-        try {
-            const response = await fetch('http://localhost:8000/upload', {
-                method: 'POST',
-                body: formData,
-            });
-            const data = await response.json();
+            try {
+                // If the backend isn't real (e.g. on Vercel), this will fail. That's fine for the demo,
+                // we'll just bypass it if it fails so they can still see the UI layout.
+                const response = await fetch('http://localhost:8000/upload', {
+                    method: 'POST',
+                    body: formData,
+                });
 
-            if (data.status === 'success') {
-                localStorage.setItem('cmads_video_source', `upload:${data.filename}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.status === 'success') {
+                        localStorage.setItem('cmads_video_source', `upload:${data.filename}`);
+                        navigate('/dashboard');
+                        return;
+                    }
+                }
+
+                // Fallback for Vercel Demo: Force navigation even if fetch fails/rejects
+                throw new Error("Backend not reachable");
+            } catch (error) {
+                console.warn('Backend unavailable. Entering offline demo mode.');
+                localStorage.setItem('cmads_video_source', `demo:offline`);
                 navigate('/dashboard');
-            } else {
-                alert(`Upload failed: ${data.error}`);
+            } finally {
+                setIsUploading(false);
             }
-        } catch (error) {
-            console.error('Upload error:', error);
-            alert('Error uploading file. Make sure the backend is running.');
-        } finally {
-            setIsUploading(false);
+        } else if (driveUrl) {
+            localStorage.setItem('cmads_video_source', driveUrl);
+            navigate('/dashboard');
+        } else {
+            navigate('/dashboard'); // Pure bypass
         }
     };
 
@@ -119,9 +136,9 @@ export default function Picker() {
                                 </div>
                             </div>
                             <button
-                                onClick={handleUpload}
+                                onClick={handleUploadClick}
                                 disabled={!selectedFile || isUploading}
-                                className="w-full mt-2 px-6 py-2 bg-primary text-accent-white rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-opacity-80 transition-opacity"
+                                className="w-full mt-2 px-6 py-2 bg-text-primary text-bg-primary rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-opacity-80 transition-opacity"
                             >
                                 {isUploading ? 'Uploading...' : 'Upload & Process'}
                             </button>
@@ -130,9 +147,50 @@ export default function Picker() {
                 </div>
             </div>
 
-            <p className="text-xs text-text-tertiary text-center pt-4 border-t border-border-subtle">
+            <p className="text-xs text-text-primary/50 text-center pt-4 border-t border-text-primary/20">
                 Processing occurs locally on your machine engine. Large files may take a few moments to initialize tracking.
             </p>
+
+            {/* Brutalist Demo Warning Overlay */}
+            {showDemoWarning && (
+                <div className="fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-center p-4">
+                    <div className="border border-[#ff0000] bg-[#050505] p-8 md:p-12 max-w-2xl w-full flex flex-col items-center relative gap-8 shadow-2xl animate-in fade-in zoom-in duration-300">
+                        {/* Red danger header tab */}
+                        <div className="absolute top-0 left-0 w-full h-2 bg-[#ff0000]"></div>
+
+                        <h2 className="text-[#ff0000] font-koulen text-4xl leading-none mt-2 w-full text-center tracking-wide">
+                            [ SYSTEM NOTICE ]
+                        </h2>
+
+                        <div className="text-text-primary font-mono text-sm md:text-base leading-relaxed text-center opacity-90 pb-4 border-b border-[#ff0000]/30 w-full">
+                            <p>Cloud computing backend is explicitly disabled for this public web demonstration.</p>
+                            <br />
+                            <p className="opacity-70">
+                                To process this video stream using the OpenCV computer vision and AMD edge inference ML engines, the core Python application must be run locally or connected to a dedicated cloud GPU instance.
+                            </p>
+                            <br />
+                            <p className="text-[#ff0000] font-bold">
+                                Proceeding will load the UI dashboard in an offline state (no live telemetry).
+                            </p>
+                        </div>
+
+                        <div className="flex flex-col md:flex-row w-full gap-4 mt-2 font-mono uppercase">
+                            <button
+                                onClick={() => setShowDemoWarning(false)}
+                                className="flex-1 py-4 border border-text-primary/50 text-text-primary hover:bg-text-primary hover:text-bg-primary transition-colors tracking-widest"
+                            >
+                                [ CANCEL ]
+                            </button>
+                            <button
+                                onClick={proceedToDashboard}
+                                className="flex-1 py-4 bg-[#ff0000]/10 border border-[#ff0000] text-[#ff0000] hover:bg-[#ff0000] hover:text-black transition-colors font-bold tracking-widest"
+                            >
+                                {isUploading ? '[ BYPASSING... ]' : '[ PROCEED ANYWAY ]'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

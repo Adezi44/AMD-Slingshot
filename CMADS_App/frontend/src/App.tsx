@@ -12,11 +12,11 @@ function App() {
   }
 
   return (
-    <div className="flex h-screen w-full bg-bg-primary text-text-primary overflow-hidden relative font-mono">
+    <div className={`flex h-screen w-full bg-bg-primary text-text-primary relative font-mono ${isArchitecturePage ? 'overflow-auto' : 'overflow-hidden'}`}>
       <div className="noise-overlay"></div>
 
       {/* Absolute Pinned Navigation */}
-      <nav className="absolute top-0 left-0 pt-8 px-8 pb-2 md:pt-12 md:px-12 md:pb-4 z-50 flex flex-col justify-between h-[100vh] w-full pointer-events-none">
+      <nav className={`absolute top-0 left-0 pt-8 px-8 pb-2 md:pt-12 md:px-12 md:pb-4 z-50 flex flex-col justify-between h-[100vh] w-full pointer-events-none ${isArchitecturePage ? 'fixed' : 'absolute'}`}>
         {/* Top Left: Massive Header */}
         <div className="pointer-events-auto glass-effect w-max px-6 pt-4 pb-2">
           <h1 className="font-koulen text-[80px] md:text-[120px] leading-[0.8] tracking-tight">CMADS</h1>

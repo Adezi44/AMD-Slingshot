@@ -36,6 +36,7 @@ export default function Dashboard() {
     const [logs, setLogs] = useState<LogEntry[]>([{ timestamp: new Date().toLocaleTimeString(), message: 'SYSTEM INITIALIZED', type: 'info' }]);
     const [historyData, setHistoryData] = useState<TelemetryData[]>([]);
     const [showLogs, setShowLogs] = useState(false);
+    const [privacyFilter, setPrivacyFilter] = useState(false);
     const [isCalibrating, setIsCalibrating] = useState(false);
     const [restartKey, setRestartKey] = useState(0);
 
@@ -174,6 +175,9 @@ export default function Dashboard() {
                     <button onClick={handleReset} className="text-left hover:bg-text-primary hover:text-text-secondary w-fit transition-none px-1 text-risk-moderate">[ RESET MODEL ]</button>
                     <button onClick={() => setShowLogs(true)} className="text-left hover:bg-text-primary hover:text-text-secondary w-fit transition-none px-1">[ SYSTEM LOGS ]</button>
                     <button onClick={handleExport} className="text-left hover:bg-text-primary hover:text-text-secondary w-fit transition-none px-1">[ DATA EXPORT ]</button>
+                    <button onClick={() => setPrivacyFilter(!privacyFilter)} className={`text-left hover:bg-text-primary hover:text-text-secondary w-fit transition-none px-1 mt-4 ${privacyFilter ? 'text-[#00ff41] hover:text-[#00ff41]/80' : ''}`}>
+                        [ PRIVACY FILTER: {privacyFilter ? 'ON' : 'OFF'} ]
+                    </button>
                 </div>
             </div>
 
@@ -182,7 +186,11 @@ export default function Dashboard() {
 
                 {/* Video Stream Background */}
                 {telemetry.frame && (
-                    <img src={`data:image/jpeg;base64,${telemetry.frame}`} alt="Stream Frame" className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-screen" />
+                    <img
+                        src={`data:image/jpeg;base64,${telemetry.frame}`}
+                        alt="Stream Frame"
+                        className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-in-out ${privacyFilter ? 'blur-2xl opacity-20 grayscale brightness-50 mix-blend-normal' : 'opacity-60 mix-blend-screen'}`}
+                    />
                 )}
 
                 {/* 2x2 Grid */}
