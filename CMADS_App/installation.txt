@@ -1,0 +1,11 @@
+# FRONTEND INSTALLATION
+cd frontend
+npm install
+cp .env.example .env    # (Create their own .env file and add their own Google Client ID)
+npm run dev
+
+# BACKEND INSTALLATION
+cd ../backend
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
