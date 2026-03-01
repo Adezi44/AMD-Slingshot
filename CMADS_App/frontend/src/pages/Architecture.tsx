@@ -1,4 +1,4 @@
-import { Network, Cpu, Database, Binary } from 'lucide-react';
+import { Network, Cpu } from 'lucide-react';
 
 export default function Architecture() {
     return (
