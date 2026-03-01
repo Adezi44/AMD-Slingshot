@@ -25,6 +25,22 @@
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 }
 
+.glass-effect {
+  /* background: rgba(255, 255, 255, 0);
+  border-radius: 16px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+  border: 1px solid rgba(255, 255, 255, 0.01);  */
+
+  background: rgba(255, 255, 255, 0);
+  border-radius: 16px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(1.5px);
+  -webkit-backdrop-filter: blur(1.5px);
+  border: 1px solid rgba(255, 255, 255, 0);
+}
+
 /* Surge Animation */
 @keyframes surge-pulse {
   0% {
@@ -48,4 +64,91 @@
 ::-webkit-scrollbar {
   width: 0px;
   /* Hide scrollbar for clean look */
+}
+
+.data-packet {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background-color: var(--color-text-primary, #00FF41);
+  box-shadow: 0 0 10px #00FF41;
+  animation: data-flow 2s infinite linear;
+}
+
+@keyframes data-flow {
+  0% {
+    left: 0%;
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  90% {
+    opacity: 1;
+  }
+
+  100% {
+    left: 100%;
+    opacity: 0;
+  }
+}
+
+.data-packet-vertical {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background-color: var(--color-risk-moderate, #FFD700);
+  box-shadow: 0 0 10px #FFD700;
+  animation: data-flow-vertical 2s infinite linear;
+}
+
+@keyframes data-flow-vertical {
+  0% {
+    top: 0%;
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  90% {
+    opacity: 1;
+  }
+
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+/* SVG Line Animations */
+.animate-dash {
+  animation: dash 3s linear infinite;
+}
+
+.animate-dash-reverse {
+  animation: dash-reverse 3s linear infinite;
+}
+
+@keyframes dash {
+  from {
+    stroke-dashoffset: 100;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes dash-reverse {
+  from {
+    stroke-dashoffset: 0;
+  }
+
+  to {
+    stroke-dashoffset: 100;
+  }
 }

@@ -14,6 +14,11 @@ import os
 # Apply nest_asyncio as requested
 nest_asyncio.apply()
 
+# Ensure uploads directory exists
+UPLOAD_DIR = "uploads"
+if not os.path.exists(UPLOAD_DIR):
+    os.makedirs(UPLOAD_DIR)
+
 app = FastAPI(title="CMADS Backend")
 
 # Configure CORS
@@ -51,21 +56,69 @@ async def root():
 async def health():
     return {"status": "healthy"}
 
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
+from fastapi import UploadFile, File
+import shutil
+
+@app.post("/upload")
+async def upload_video(file: UploadFile = File(...)):
+    try:
+        file_path = os.path.join(UPLOAD_DIR, file.filename)
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        return {"filename": file.filename, "status": "success"}
+    except Exception as e:
+        return {"error": str(e), "status": "failed"}
+
+import gdown
+import uuid
+from typing import Optional
+
+@app.websocket("/ws/{video_id}")
+async def websocket_endpoint(websocket: WebSocket, video_id: str):
     await websocket.accept()
-    print("Dashboard Client Connected via FastAPI WebSocket!")
+    print(f"Dashboard Client Connected! Processing Request for ID: {video_id}")
     
     if model is None:
         await websocket.send_json({"error": "YOLO model not loaded"})
         await websocket.close()
         return
 
-    cap = cv2.VideoCapture(VIDEO_PATH)
+    # 1. Determine Video Source
+    current_video_path = VIDEO_PATH
+    temp_file_path = None
+
+    if video_id and video_id != "local" and video_id != "undefined":
+        try:
+            if video_id.startswith("upload:"):
+                filename = video_id.split("upload:")[1]
+                upload_path = os.path.join(UPLOAD_DIR, filename)
+                if os.path.exists(upload_path):
+                    print(f"Using uploaded file: {upload_path}")
+                    current_video_path = upload_path
+                else:
+                    print(f"Uploaded file {filename} not found. Falling back.")
+            else:
+                print(f"Attempting to download Google Drive File ID: {video_id}")
+                # ... existing download logic ...
+                temp_file_path = f"temp_video_{uuid.uuid4().hex[:8]}.mp4"
+                url = f'https://drive.google.com/uc?id={video_id}'
+                gdown.download(url, temp_file_path, quiet=False)
+                
+                if os.path.exists(temp_file_path):
+                    current_video_path = temp_file_path
+        except Exception as e:
+            print(f"Error resolving video source: {e}")
+
+    # 2. Open Video Capture
+    cap = cv2.VideoCapture(current_video_path)
     if not cap.isOpened():
-        print(f"Error reading video at {VIDEO_PATH}. Please check the path.")
-        await websocket.send_json({"error": f"Could not open video file at {VIDEO_PATH}"})
+        print(f"Error reading video at {current_video_path}.")
+        await websocket.send_json({"error": f"Could not open video file."})
         await websocket.close()
+        
+        # Cleanup if it was a downloaded file
+        if temp_file_path and os.path.exists(temp_file_path):
+            os.remove(temp_file_path)
         return
 
     try:
@@ -221,6 +274,13 @@ async def websocket_endpoint(websocket: WebSocket):
         print(f"Error in WebSocket handler: {e}")
     finally:
         cap.release()
+        # Clean up the temporary file if it was downloaded
+        if temp_file_path and os.path.exists(temp_file_path):
+             try:
+                 os.remove(temp_file_path)
+                 print(f"Cleaned up temporary file: {temp_file_path}")
+             except Exception as e:
+                 print(f"Failed to delete temp file: {e}")
 
 if __name__ == "__main__":
     import uvicorn

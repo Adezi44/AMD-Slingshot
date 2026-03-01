@@ -34,10 +34,10 @@ export default function Login() {
                     </button>
 
                     <button
-                        onClick={() => navigate('/dashboard')}
+                        onClick={() => navigate('/picker')}
                         className="w-full border border-text-primary/20 py-4 text-[14px] uppercase hover:bg-risk-moderate hover:text-text-secondary hover:border-risk-moderate transition-colors text-text-primary/70"
                     >
-                        [ DEV BYPASS: ENTER DASHBOARD ]
+                        [ DEV BYPASS: ENTER SYSTEM ]
                     </button>
 
                     <p className="text-[10px] text-risk-critical mt-4 text-center">
